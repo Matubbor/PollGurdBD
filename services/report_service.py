@@ -3,20 +3,35 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from database.repository import ElectionRepository
 from security import report_hash
+from services.encryption_service import ReportEncryptionService
+
+
+@dataclass(frozen=True)
+class ReportArtifacts:
+    """Paths and report data produced by one generation operation."""
+
+    readable_path: Path
+    encrypted_path: Path
+    report: dict[str, Any]
 
 
 class ReportService:
     def __init__(
-        self, repository: ElectionRepository, reports_directory: str | Path
+        self,
+        repository: ElectionRepository,
+        reports_directory: str | Path,
+        encryption_service: ReportEncryptionService,
     ):
         self.repository = repository
         self.reports_directory = Path(reports_directory)
+        self.encryption_service = encryption_service
 
     def build_summary(self) -> dict[str, Any]:
         counts = self.repository.get_ballot_counts()
@@ -34,30 +49,41 @@ class ReportService:
             "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
         }
 
-    def generate_report(self, officer_id: int) -> tuple[Path, dict[str, Any]]:
-        """Write canonical report data and its SHA-256 digest to disk."""
+    def generate_report(self, officer_id: int) -> ReportArtifacts:
+        """Write readable and encrypted copies of a tamper-evident report.
+
+        The embedded SHA-256 digest provides an integrity check. It does not
+        conceal data. Fernet separately encrypts the same JSON bytes to provide
+        confidentiality for the secure `.pgbd` output.
+        """
         summary = self.build_summary()
         digest = report_hash(summary)
         report = {**summary, "report_hash_sha256": digest}
 
         self.reports_directory.mkdir(parents=True, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-        path = self.reports_directory / f"pollguard_report_{timestamp}.json"
+        stem = f"pollguard_report_{timestamp}"
+        readable_path = self.reports_directory / f"{stem}.json"
+        encrypted_path = self.reports_directory / f"{stem}.pgbd"
+        readable_bytes = (
+            json.dumps(report, indent=2, ensure_ascii=False) + "\n"
+        ).encode("utf-8")
         try:
-            path.write_text(
-                json.dumps(report, indent=2, ensure_ascii=False) + "\n",
-                encoding="utf-8",
+            readable_path.write_bytes(readable_bytes)
+            encrypted_path.write_bytes(
+                self.encryption_service.encrypt(readable_bytes)
             )
             self.repository.save_report_record(
-                path.name,
+                encrypted_path.name,
                 summary["generated_at"],
                 digest,
                 report,
                 officer_id,
             )
         except Exception:
-            # Avoid leaving an untracked report file if its database audit record fails.
-            if path.exists():
-                path.unlink()
+            # Avoid partial artifacts if encryption or the audit insert fails.
+            for path in (readable_path, encrypted_path):
+                if path.exists():
+                    path.unlink()
             raise
-        return path, report
+        return ReportArtifacts(readable_path, encrypted_path, report)

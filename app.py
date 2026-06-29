@@ -4,11 +4,17 @@ from __future__ import annotations
 
 import customtkinter as ctk
 
-from config import APP_NAME, DATABASE_PATH, REPORTS_DIR
+from config import (
+    APP_NAME,
+    DATABASE_PATH,
+    REPORT_ENCRYPTION_KEY_PATH,
+    REPORTS_DIR,
+)
 from database.repository import ElectionRepository
 from database.schema import initialize_database
 from services.auth_service import AuthenticationService
 from services.election_service import ElectionService
+from services.encryption_service import ReportEncryptionService
 from services.report_service import ReportService
 from ui.views import DashboardView, LoginView
 
@@ -28,7 +34,10 @@ class PollGuardApp(ctk.CTk):
         repository = ElectionRepository(DATABASE_PATH)
         self.auth_service = AuthenticationService(repository)
         self.election_service = ElectionService(repository)
-        self.report_service = ReportService(repository, REPORTS_DIR)
+        encryption_service = ReportEncryptionService(REPORT_ENCRYPTION_KEY_PATH)
+        self.report_service = ReportService(
+            repository, REPORTS_DIR, encryption_service
+        )
         self.current_view: ctk.CTkFrame | None = None
         self.show_login()
 
@@ -52,8 +61,8 @@ class PollGuardApp(ctk.CTk):
 
 
 def main() -> None:
-    ctk.set_appearance_mode("System")
-    ctk.set_default_color_theme("blue")
+    ctk.set_appearance_mode("Light")
+    ctk.set_default_color_theme("green")
     app = PollGuardApp()
     app.mainloop()
 

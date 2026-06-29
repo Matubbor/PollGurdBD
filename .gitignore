@@ -4,6 +4,7 @@ __pycache__/
 .venv/
 venv/
 database/*.db
+database/*.key
 reports/generated_reports/*.json
+reports/generated_reports/*.pgbd
 !reports/generated_reports/.gitkeep
-

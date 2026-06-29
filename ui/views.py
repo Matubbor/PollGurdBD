@@ -645,7 +645,7 @@ class ReportsPage(ctk.CTkFrame):
         PageHeader(
             self,
             "Election Reports",
-            "Create a local JSON summary protected by a SHA-256 integrity hash.",
+            "Create readable and encrypted local reports with separate protections.",
         ).grid(row=0, column=0, sticky="ew", pady=(0, 20))
 
         toolbar = ctk.CTkFrame(
@@ -666,13 +666,13 @@ class ReportsPage(ctk.CTkFrame):
         ).grid(row=0, column=0, padx=24, pady=(20, 2), sticky="ew")
         ctk.CTkLabel(
             toolbar,
-            text="Reports are saved only on this computer.",
+            text="SHA-256 checks integrity; Fernet encrypts the secure .pgbd copy.",
             text_color=COLORS["muted"],
             anchor="w",
         ).grid(row=1, column=0, padx=24, pady=(0, 20), sticky="ew")
         ctk.CTkButton(
             toolbar,
-            text="Generate hashed report",
+            text="Generate secure report",
             width=210,
             height=44,
             fg_color=COLORS["green"],
@@ -744,16 +744,16 @@ class ReportsPage(ctk.CTkFrame):
 
     def generate(self) -> None:
         try:
-            path, report = self.report_service.generate_report(self.officer["id"])
+            artifacts = self.report_service.generate_report(self.officer["id"])
         except Exception as exc:
             messagebox.showerror("Report not generated", str(exc))
             return
         self.refresh()
         self.status_label.configure(
             text=(
-                f"Saved: {path}\n"
-                f"SHA-256: {report['report_hash_sha256']}"
+                f"Readable JSON: {artifacts.readable_path}\n"
+                f"Encrypted report: {artifacts.encrypted_path}\n"
+                f"SHA-256: {artifacts.report['report_hash_sha256']}"
             ),
             text_color=COLORS["green"],
         )
-

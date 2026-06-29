@@ -6,6 +6,9 @@ import json
 from typing import Any
 
 
+PBKDF2_ITERATIONS = 600_000
+
+
 def hash_voter_id(voter_id: str) -> str:
     """Return a stable SHA-256 digest for a normalized voter identifier."""
     normalized = voter_id.strip()
@@ -13,9 +16,18 @@ def hash_voter_id(voter_id: str) -> str:
 
 
 def hash_password(password: str, salt: str) -> str:
-    """Hash a local officer password with its per-account salt."""
-    value = f"{salt}:{password}".encode("utf-8")
-    return hashlib.sha256(value).hexdigest()
+    """Derive a password hash with a slow, salted PBKDF2-HMAC operation.
+
+    Unlike a single SHA-256 call, PBKDF2 deliberately performs many iterations,
+    making offline password guessing substantially more expensive.
+    """
+    derived_key = hashlib.pbkdf2_hmac(
+        "sha256",
+        password.encode("utf-8"),
+        bytes.fromhex(salt),
+        PBKDF2_ITERATIONS,
+    )
+    return derived_key.hex()
 
 
 def verify_password(password: str, salt: str, expected_hash: str) -> bool:
@@ -25,7 +37,7 @@ def verify_password(password: str, salt: str, expected_hash: str) -> bool:
 
 
 def report_hash(payload: dict[str, Any]) -> str:
-    """Hash canonical JSON so field ordering cannot change the digest."""
+    """Create an integrity fingerprint; this does not encrypt report content."""
     canonical = json.dumps(
         payload,
         sort_keys=True,
@@ -33,4 +45,3 @@ def report_hash(payload: dict[str, Any]) -> str:
         ensure_ascii=False,
     )
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
-
