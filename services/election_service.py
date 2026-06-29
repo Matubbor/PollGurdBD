@@ -39,3 +39,5 @@ class ElectionService:
     def recent_activity(self) -> list[dict[str, Any]]:
         return self.repository.recent_ballot_activity()
 
+    def audit_activity(self, limit: int = 200) -> list[dict[str, Any]]:
+        return self.repository.get_audit_activity(limit)

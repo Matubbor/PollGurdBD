@@ -216,6 +216,59 @@ class ElectionRepository:
             ).fetchall()
         return [dict(row) for row in rows]
 
+    def get_audit_activity(self, limit: int = 200) -> list[dict[str, Any]]:
+        """Return ballot and report events as one read-only activity feed."""
+        safe_limit = max(1, min(int(limit), 500))
+        with self._connection() as connection:
+            rows = connection.execute(
+                """
+                SELECT
+                    event_time,
+                    event_type,
+                    reference,
+                    username,
+                    details
+                FROM (
+                    SELECT
+                        l.created_at AS event_time,
+                        CASE
+                            WHEN l.old_status IS NULL THEN 'Ballot issued'
+                            ELSE 'Ballot status updated'
+                        END AS event_type,
+                        b.ballot_code AS reference,
+                        o.username AS username,
+                        CASE
+                            WHEN l.old_status IS NULL
+                                THEN 'Status: ' || l.new_status
+                            ELSE l.old_status || ' → ' || l.new_status
+                        END AS details,
+                        l.id AS event_id,
+                        1 AS source_order
+                    FROM ballot_logs AS l
+                    JOIN ballots AS b ON b.id = l.ballot_id
+                    LEFT JOIN officers AS o ON o.id = l.officer_id
+
+                    UNION ALL
+
+                    SELECT
+                        r.generated_at AS event_time,
+                        'Report generated' AS event_type,
+                        r.filename AS reference,
+                        o.username AS username,
+                        'Encrypted .pgbd • SHA-256 '
+                            || SUBSTR(r.report_hash, 1, 12) || '…' AS details,
+                        r.id AS event_id,
+                        2 AS source_order
+                    FROM reports AS r
+                    LEFT JOIN officers AS o ON o.id = r.generated_by
+                )
+                ORDER BY event_time DESC, source_order DESC, event_id DESC
+                LIMIT ?
+                """,
+                (safe_limit,),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
     def save_report_record(
         self,
         filename: str,
