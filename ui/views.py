@@ -19,6 +19,7 @@ COLORS = {
     "gold": "#C9A84C",
     "gold_hover": "#D7B75A",
     "gold_soft": "#2B281F",
+    "gold_border": "#5A4D2D",
     "green": "#2E7D52",
     "green_hover": "#256643",
     "red": "#B54040",
@@ -32,6 +33,10 @@ COLORS = {
     "border": "#E4DED4",
     "text": "#1A1A24",
     "entry": "#20202C",
+    "paper": "#FAF8F4",
+    "light_text": "#F1EFEA",
+    "dark_muted": "#B4B1BA",
+    "dark_placeholder": "#706D78",
 }
 
 
@@ -104,9 +109,9 @@ class LoginView(ctk.CTkFrame):
             corner_radius=9,
             placeholder_text="Enter officer username",
             fg_color=COLORS["entry"],
-            border_color="#5A4D2D",
-            text_color="#F1EFEA",
-            placeholder_text_color="#706D78",
+            border_color=COLORS["gold_border"],
+            text_color=COLORS["light_text"],
+            placeholder_text_color=COLORS["dark_placeholder"],
         )
         self.username_entry.grid(row=3, column=0, pady=5)
         self.password_entry = ctk.CTkEntry(
@@ -117,9 +122,9 @@ class LoginView(ctk.CTkFrame):
             placeholder_text="Enter password",
             show="●",
             fg_color=COLORS["entry"],
-            border_color="#5A4D2D",
-            text_color="#F1EFEA",
-            placeholder_text_color="#706D78",
+            border_color=COLORS["gold_border"],
+            text_color=COLORS["light_text"],
+            placeholder_text_color=COLORS["dark_placeholder"],
         )
         self.password_entry.grid(row=4, column=0, pady=5)
         self.password_entry.bind("<Return>", lambda _event: self.attempt_login())
@@ -151,7 +156,7 @@ class LoginView(ctk.CTkFrame):
         badges = ctk.CTkFrame(card, fg_color="transparent")
         badges.grid(row=7, column=0)
         for column, text in enumerate(
-            ("Offline mode", "Local database", "Demo data only")
+            ("Offline mode", "Local database",)
         ):
             ctk.CTkLabel(
                 badges,
@@ -165,7 +170,7 @@ class LoginView(ctk.CTkFrame):
 
         ctk.CTkLabel(
             self,
-            text="PollGuard BD v1.0 · COM668 AT3 Demonstration Build",
+            text="PollGuard BD v1.0",
             fg_color="transparent",
             text_color="#77737D",
             font=ctk.CTkFont(size=11),
@@ -181,7 +186,10 @@ class LoginView(ctk.CTkFrame):
             self.password_entry.delete(0, "end")
             return
         except Exception as exc:
-            messagebox.showerror("Login error", f"Could not access the database.\n{exc}")
+            messagebox.showerror(
+                "Login error",
+                f"Could not access the database.\n{exc}",
+            )
             return
         self.on_login(officer)
 
@@ -199,8 +207,6 @@ class DashboardView(ctk.CTkFrame):
     ):
         super().__init__(master, fg_color=COLORS["surface"])
         self.officer = officer
-        self.election_service = election_service
-        self.report_service = report_service
         self.on_logout = on_logout
         self.pages: dict[str, ctk.CTkFrame] = {}
         self.nav_buttons: dict[str, ctk.CTkButton] = {}
@@ -311,7 +317,7 @@ class DashboardView(ctk.CTkFrame):
             fg_color="transparent",
             justify="left",
             anchor="w",
-            text_color="#B4B1BA",
+            text_color=COLORS["dark_muted"],
             font=ctk.CTkFont(size=12),
             wraplength=175,
         ).grid(row=0, column=0, padx=14, pady=12, sticky="ew")
@@ -350,7 +356,12 @@ class HomeDashboardPage(ctk.CTkFrame):
     """At-a-glance local election overview for the signed-in officer."""
 
     METRICS = (
-        ("total_registered_voters", "Registered voters", "Local voter register", "gold"),
+        (
+            "total_registered_voters",
+            "Registered voters",
+            "Local voter register",
+            "gold",
+        ),
         ("issued_ballots", "Issued ballots", "All ballots issued", "navy"),
         ("cast_ballots", "Cast ballots", "Recorded as cast", "green"),
         ("spoiled_ballots", "Spoiled ballots", "Recorded as spoiled", "red"),
@@ -399,7 +410,7 @@ class HomeDashboardPage(ctk.CTkFrame):
         ).grid(row=0, column=0, padx=24, pady=(20, 2), sticky="ew")
         ctk.CTkLabel(
             welcome_card,
-            text="Role: Polling Officer  •  Session status: Active",
+            text="Officer access: Authorised  •  Session status: Active",
             fg_color="transparent",
             text_color=COLORS["muted_dark"],
             font=ctk.CTkFont(size=12),
@@ -410,7 +421,7 @@ class HomeDashboardPage(ctk.CTkFrame):
             welcome_card,
             fg_color=COLORS["gold_soft"],
             border_width=1,
-            border_color="#5A4D2D",
+            border_color=COLORS["gold_border"],
             corner_radius=10,
         )
         status_panel.grid(
@@ -432,7 +443,7 @@ class HomeDashboardPage(ctk.CTkFrame):
             status_panel,
             text="",
             fg_color="transparent",
-            text_color="#B4B1BA",
+            text_color=COLORS["dark_muted"],
             font=ctk.CTkFont(size=12),
         )
         self.clock_label.grid(row=1, column=0, padx=18, pady=(0, 11))
@@ -650,8 +661,8 @@ class VoterLoggingPage(ctk.CTkFrame):
             card,
             height=48,
             corner_radius=9,
-            placeholder_text="10–17 digit fictional voter ID",
-            fg_color="#FAF8F4",
+            placeholder_text="Enter registered voter ID",
+            fg_color=COLORS["paper"],
             border_color=COLORS["border"],
             text_color=COLORS["text"],
             placeholder_text_color="#9A96A0",
@@ -1025,7 +1036,7 @@ class AuditLogPage(ctk.CTkFrame):
         ).grid(row=0, column=0, padx=24, pady=(18, 2), sticky="ew")
         ctk.CTkLabel(
             toolbar,
-            text="Read-only events from ballot_logs and generated report records.",
+            text="Read-only history from local ballot and report records.",
             fg_color="transparent",
             text_color=COLORS["muted"],
             anchor="w",
@@ -1066,7 +1077,7 @@ class AuditLogPage(ctk.CTkFrame):
         self.audit_tree = BallotTrackingPage._create_tree(
             table_card,
             columns,
-            (170, 145, 225, 90, 250),
+            (155, 135, 145, 65, 340),
         )
         for column, title in zip(
             columns,
@@ -1101,6 +1112,13 @@ class AuditLogPage(ctk.CTkFrame):
             sticky="ew",
         )
 
+    @staticmethod
+    def _display_reference(event_type: str, reference: str) -> str:
+        """Shorten long report filenames for the table without changing data."""
+        if event_type != "Report generated" or len(reference) <= 18:
+            return reference
+        return f"{reference[:8]}…{reference[-9:]}"
+
     def refresh(self) -> None:
         try:
             events = self.election_service.audit_activity()
@@ -1129,7 +1147,9 @@ class AuditLogPage(ctk.CTkFrame):
                 values=(
                     str(event["event_time"]).replace("T", " ")[:19],
                     event["event_type"],
-                    event["reference"],
+                    self._display_reference(
+                        event["event_type"], event["reference"]
+                    ),
                     event["username"] or "Unavailable",
                     details,
                 ),
@@ -1223,7 +1243,7 @@ class ReportsPage(ctk.CTkFrame):
         ).grid(row=0, column=0, padx=24, pady=(20, 8), sticky="ew")
         self.preview = ctk.CTkTextbox(
             preview_card,
-            fg_color="#FAF8F4",
+            fg_color=COLORS["paper"],
             text_color=COLORS["text"],
             border_width=1,
             border_color=COLORS["border"],
@@ -1250,7 +1270,7 @@ class ReportsPage(ctk.CTkFrame):
             self._set_preview(f"Could not load report data:\n{exc}")
             return
         lines = [
-            "POLLGuard BD — Election Summary",
+            "PollGuard BD — Election Summary",
             "=" * 40,
             f"Registered voters : {summary['total_registered_voters']}",
             f"Issued ballots    : {summary['issued_ballots']}",

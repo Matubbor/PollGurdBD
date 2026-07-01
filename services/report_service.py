@@ -39,7 +39,7 @@ class ReportService:
         turnout = (counts["issued"] / registered * 100) if registered else 0.0
         return {
             "application": "PollGuard BD",
-            "data_notice": "Fictional local demonstration data only",
+            "data_notice": "Training Environment",
             "total_registered_voters": registered,
             "issued_ballots": counts["issued"],
             "cast_ballots": counts["cast"],

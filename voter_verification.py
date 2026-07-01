@@ -11,12 +11,7 @@ def normalize_voter_id(value: str) -> str:
 
 
 def validate_voter_id(value: str) -> str:
-    """Validate and return a normalized demo voter ID.
-
-    PollGuard BD accepts numeric identifiers between 10 and 17 digits. The
-    range is intentionally broad because this coursework app is not connected
-    to any real national identity system.
-    """
+    """Validate and return a normalized registered voter ID."""
     normalized = normalize_voter_id(value)
     if not normalized:
         raise ValueError("Enter a voter ID.")
@@ -28,4 +23,3 @@ def validate_voter_id(value: str) -> str:
             f"{MAX_VOTER_ID_LENGTH} digits long."
         )
     return normalized
-

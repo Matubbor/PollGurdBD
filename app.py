@@ -28,7 +28,7 @@ class PollGuardApp(ctk.CTk):
         self.geometry("1180x760")
         self.minsize(1000, 680)
 
-        # Startup is idempotent: it creates missing tables/demo records but does
+        # Startup is idempotent: it creates missing tables and seed records but does
         # not reset or overwrite election activity.
         initialize_database(DATABASE_PATH)
         repository = ElectionRepository(DATABASE_PATH)

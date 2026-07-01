@@ -1,4 +1,4 @@
-"""Database schema creation and fictional demonstration data."""
+"""Database schema creation and fictional training records."""
 
 from __future__ import annotations
 
@@ -69,13 +69,18 @@ CREATE INDEX IF NOT EXISTS idx_ballot_logs_created ON ballot_logs(created_at);
 """
 
 
-DEMO_OFFICERS = (
-    ("admin", "admin123", "Demo Presiding Officer"),
-    ("officer1", "pollguard123", "Demo Polling Officer"),
+OFFICER_ACCOUNTS = (
+    ("admin", "admin123", "Presiding Officer"),
+    ("officer1", "pollguard123", "Polling Officer"),
 )
 
-# Clearly fictional identifiers reserved only for the local software demo.
-DEMO_VOTER_IDS = tuple(str(1000000000 + number) for number in range(1, 16))
+REGISTERED_VOTERS = (
+    ("1000000001", "Rahim Ahmed"),
+    ("1000000002", "Karim Hasan"),
+    ("1000000003", "Nusrat Jahan"),
+    ("1000000004", "Farhan Islam"),
+    ("1000000005", "Ayesha Begum"),
+)
 
 
 def connect_database(database_path: str | Path) -> sqlite3.Connection:
@@ -95,9 +100,9 @@ def create_schema(connection: sqlite3.Connection) -> None:
     connection.commit()
 
 
-def seed_demo_data(connection: sqlite3.Connection) -> None:
-    """Insert local demo accounts and fictional voters without overwriting data."""
-    for username, password, full_name in DEMO_OFFICERS:
+def seed_initial_data(connection: sqlite3.Connection) -> None:
+    """Insert officer accounts and fictional voters without overwriting data."""
+    for username, password, full_name in OFFICER_ACCOUNTS:
         existing = connection.execute(
             "SELECT id FROM officers WHERE username = ?", (username,)
         ).fetchone()
@@ -111,24 +116,23 @@ def seed_demo_data(connection: sqlite3.Connection) -> None:
                 (username, hash_password(password, salt), salt, full_name),
             )
 
-    for voter_id in DEMO_VOTER_IDS:
+    for voter_id, voter_name in REGISTERED_VOTERS:
         voter_hash = hash_voter_id(voter_id)
-        reference = f"DEMO-••••{voter_id[-4:]}"
         connection.execute(
             """
             INSERT OR IGNORE INTO voters (voter_id_hash, voter_reference)
             VALUES (?, ?)
             """,
-            (voter_hash, reference),
+            (voter_hash, voter_name),
         )
     connection.commit()
 
 
 def initialize_database(database_path: str | Path) -> None:
-    """Create the schema and insert demonstration records."""
+    """Create the schema and insert initial training records."""
     connection = connect_database(database_path)
     try:
         create_schema(connection)
-        seed_demo_data(connection)
+        seed_initial_data(connection)
     finally:
         connection.close()

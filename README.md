@@ -1,11 +1,11 @@
 # PollGuard BD
 
 PollGuard BD is an offline desktop assistant for a fictional paper-based
-election demonstration. It is designed for polling officers—not voters—and
-runs locally with Python, CustomTkinter, SQLite, `hashlib`, and Fernet
-encryption from the `cryptography` package.
+election training environment. It is designed for polling officers—not
+voters—and runs locally with Python, CustomTkinter, SQLite, `hashlib`, and
+Fernet encryption from the `cryptography` package.
 
-This COM668 AT3 project uses demonstration data only. It does **not** provide
+This COM668 AT3 project uses fictional training data only. It does **not** provide
 internet voting, online monitoring, blockchain voting, national-election
 integration, or access to real voter data.
 
@@ -13,6 +13,8 @@ integration, or access to real voter data.
 
 - **Local officer login:** Authenticates credentials stored as salted,
   600,000-iteration PBKDF2-HMAC-SHA256 password hashes in SQLite.
+- **Dashboard:** Presents the signed-in officer, offline status, local time,
+  voter totals, ballot totals, and turnout.
 - **Voter Logging:** Validates the entered ID, compares its SHA-256 digest with
   the local register, rejects unknown or duplicate voters, and atomically marks
   an eligible voter and issues one ballot.
@@ -20,9 +22,11 @@ integration, or access to real voter data.
   officer can select a pending ballot and mark it Cast or Spoiled. Every issue
   and status update is written to the ballot activity log.
 - **Reports:** Shows turnout and ballot totals, then writes both a readable
-  `.json` demonstration copy and a Fernet-encrypted `.pgbd` secure copy to
+  `.json` review copy and a Fernet-encrypted `.pgbd` secure copy to
   `reports/generated_reports/`. The report also carries a SHA-256 integrity
   hash calculated from its canonical summary data.
+- **Audit Log:** Provides a read-only history of ballot issue, ballot status,
+  and report generation events.
 - **Local persistence:** All election activity is stored in
   `database/pollguard.db`; no network connection is used at runtime.
 
@@ -79,8 +83,8 @@ python database/db_init.py
 ```
 
 This creates `database/pollguard.db`, all five required tables, two officer
-accounts, and 15 fictional voter records. Re-running the command is safe: it
-keeps existing activity. To deliberately erase the local demonstration and
+accounts, and five fictional voter records. Re-running the command is safe: it
+keeps existing activity. To deliberately reset the local training environment and
 start again:
 
 ```bash
@@ -95,9 +99,9 @@ python app.py
 
 The app also checks the schema at startup without deleting existing records.
 
-## Demo credentials and voter IDs
+## Officer credentials and registered voter IDs
 
-Primary demonstration login:
+Primary officer login:
 
 ```text
 Username: admin
@@ -111,11 +115,18 @@ Username: officer1
 Password: pollguard123
 ```
 
-Fictional voter IDs range from `1000000001` through `1000000015`. These values
-exist solely for the software demonstration. The database stores SHA-256
-digests and masked references rather than these entered identifiers.
+The fictional local voter register contains:
 
-## Exact COM668 AT3 demonstration flow
+- `1000000001` — Rahim Ahmed
+- `1000000002` — Karim Hasan
+- `1000000003` — Nusrat Jahan
+- `1000000004` — Farhan Islam
+- `1000000005` — Ayesha Begum
+
+These values exist solely for the training environment. The database stores
+SHA-256 digests rather than the entered voter identifiers.
+
+## COM668 AT3 presentation flow
 
 Before presenting, reset the fictional data and start the application:
 
@@ -124,7 +135,7 @@ python database/db_init.py --reset
 python app.py
 ```
 
-Then demonstrate these steps in order:
+Then present these steps in order:
 
 1. Explain that the machine is offline and the application uses only its local
    SQLite database. Sign in with `admin` / `admin123`.
@@ -170,7 +181,7 @@ These mechanisms have deliberately separate purposes:
 The key is generated on first report creation at
 `database/report_encryption.key`, remains on the local machine, and is excluded
 from Git. Do not delete it while encrypted reports still need to be opened.
-For this classroom demonstration the readable JSON is intentionally retained
+For assessment review, the readable JSON is intentionally retained
 for inspection; the `.pgbd` file is the secure report output.
 
 ## Run the tests
@@ -179,7 +190,7 @@ for inspection; the `.pgbd` file is the secure report output.
 python -m unittest discover -s tests -v
 ```
 
-The tests use temporary databases and do not modify the demonstration
+The tests use temporary databases and do not modify the application
 database. They cover:
 
 - invalid voter ID format rejection;

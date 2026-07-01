@@ -54,7 +54,7 @@ class ElectionServiceTests(unittest.TestCase):
         """Cast and spoiled ballots are terminal and cannot transition again."""
         for voter_id, final_status, attempted_status in (
             ("1000000005", "Cast", "Spoiled"),
-            ("1000000006", "Spoiled", "Cast"),
+            ("1000000004", "Spoiled", "Cast"),
         ):
             with self.subTest(final_status=final_status):
                 ballot = self.service.log_voter(voter_id, self.officer_id)

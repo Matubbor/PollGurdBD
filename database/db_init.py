@@ -1,4 +1,4 @@
-"""Create the local PollGuard BD database and insert fictional demo data."""
+"""Create the local PollGuard BD database and insert training records."""
 
 import argparse
 import sys
@@ -18,7 +18,7 @@ def main() -> None:
     parser.add_argument(
         "--reset",
         action="store_true",
-        help="Delete the existing local database before adding fresh demo data.",
+        help="Delete the existing local database before adding fresh training data.",
     )
     args = parser.parse_args()
 
@@ -28,10 +28,9 @@ def main() -> None:
 
     initialize_database(DATABASE_PATH)
     print(f"PollGuard BD database is ready: {DATABASE_PATH}")
-    print("Demo login: admin / admin123")
-    print("Demo voters: 1000000001 to 1000000015 (fictional data only)")
+    print("Officer login: admin / admin123")
+    print("Registered voters: 1000000001 to 1000000005 (training environment)")
 
 
 if __name__ == "__main__":
     main()
-
